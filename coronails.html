@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coronails - Reservas y Servicios</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  main {
+    flex: 1 0 auto;
+    max-width: 480px;
+    margin: 0 auto 0; /* Remove margin top for header */
+    width: 100%;
+    padding: 1rem 1.5rem 5rem; /* bottom padding for footer space */
+  }
+
+  /* Footer tabs fixed on top */
+  footer {
+    position: fixed;
+    top: 0;
+    left: 0; right: 0;
+    height: 55px;
+    background: #ec407a;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(204, 0, 102, 0.3);
+    z-index: 150;
+  }
+  footer button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem 0.3rem;
+    border-bottom: 3px solid transparent;
+    transition: color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  footer button.active {
+    border-bottom-color: #fff;
+    color: #ffebee;
+  }
+  footer button:focus {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
+  footer button svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+  
+  /* Content sections with margin-top for footer */
+  section.tab-content {
+    display: none;
+    margin-top: 65px; /* space below fixed footer */
+  }
+  section.tab-content.active {
+    display: block;
+  }
+
+  /* Container white backgrounds, servicios same width as others */
+  .container {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(233, 30, 99, 0.15);
+    padding: 1.5rem 2rem 2rem;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Inicio Tab */
+  .inicio-image {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(236, 64, 122, 0.3);
+    margin-bottom: 1rem;
+  }
+  .inicio-text {
+    text-align: center;
+    font-size: 1.15rem;
+    color: #880e4f;
+    font-weight: 600;
+  }
+
+  /* Servicios Tab */
+  .servicios-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  .servicios-list li {
+    background: #fff;
+    margin-bottom: 12px;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(236,64,122,0.15);
+    color: #880e4f;
+  }
+  .servicios-list li strong {
+    font-weight: 700;
+  }
+
+  /* Common form styles from reservation system */
+  label {
+    font-weight: 600;
+    margin-top: 1rem;
+    display: block;
+    color: #ad1457;
+  }
+  select, input[type="text"], input[type="date"], button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-top: 0.35rem;
+    border-radius: 6px;
+    border: 2px solid #f48fb1;
+    font-size: 1rem;
+    outline-offset: 2px;
+    transition: border-color 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+  }
+  select:focus, input[type="text"]:focus, input[type="date"]:focus, button:focus {
+    border-color: #ec407a;
+  }
+  button {
+    background: #ec407a;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    margin-top: 1.25rem;
+    box-shadow: 0 4px 10px rgba(236,64,122,.6);
+    transition: background-color 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background: #d81b60;
+  }
+  button:disabled {
+    background: #f48fb1;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* Slots and messages from reservation system */
+  .slots {
+    margin-top: 1rem;
+  }
+  .slot {
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    margin: 0.3rem 0;
+    border: 2px solid #f48fb1;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  .slot.available:hover {
+    background-color: #fce4ec;
+    color: #d81b60;
+  }
+  .slot.reserved {
+    background-color: #f48fb1;
+    color: white;
+    cursor: default;
+  }
+  .slot.reserved:hover {
+    background-color: #ec407a;
+  }
+  .slot.selected {
+    background-color: #f8bbd0;
+    color: #880e4f;
+    border-color: #d81b60;
+  }
+
+  .message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .message.success {
+    background-color: #fce4ec;
+    color: #ad1457;
+  }
+  .message.error {
+    background-color: #f8bbd0;
+    color: #880e4f;
+  }
+
+  .view-appointments {
+    margin-top: 2rem;
+    border-top: 2px dashed #ec407a;
+    padding-top: 1.5rem;
+  }
+  .appointments-list {
+    margin-top: 0.75rem;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #f48fb1;
+    border-radius: 6px;
+    padding: 0.75rem;
+    background: #fce4ec;
+    font-weight: 600;
+    color: #880e4f;
+  }
+  .no-appointments {
+    font-style: italic;
+    color: #ad1457;
+  }
+</style>
+</head>
+<body>
+<footer role="tablist" aria-label="Navegación principal">
+  <button id="btn-inicio" role="tab" aria-selected="true" aria-controls="tab-inicio" tabindex="0" aria-label="Inicio">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Inicio
+  </button>
+  <button id="btn-reservas" role="tab" aria-selected="false" aria-controls="tab-reservas" tabindex="-1" aria-label="Reservas">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 11h10v2H7v-2zm0 4h7v2H7v-2zm0-8h10v2H7V7z"/></svg>
+    Reservas
+  </button>
+  <button id="btn-servicios" role="tab" aria-selected="false" aria-controls="tab-servicios" tabindex="-1" aria-label="Servicios">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 7.77L18.39 18H5.61L12 7.77zM12 2L1 21h22L12 2z"/></svg>
+    Servicios
+  </button>
+</footer>
+<main>
+  <!-- Inicio Tab -->
+  <section id="tab-inicio" class="tab-content active" tabindex="0" aria-label="Inicio">
+    <div class="container">
+      <img src="/Logo.jpeg" alt="Coronails estética de uñas" class="inicio-image" />
+      <p class="inicio-text">Bienvenid@ a <strong>Coronails</strong>, tu centro de estética y belleza especializado en uñas, pestañas, cejas y depilaciones. ¡Realza tu belleza con nosotros!</p>
+    </div>
+  </section>
+
+  <!-- Reservas Tab -->
+  <section id="tab-reservas" class="tab-content" tabindex="0" aria-label="Reservas">
+    <div class="container" role="form" aria-live="polite">
+      <h2>Reservas de Belleza</h2>
+
+      <label for="service-select">Selecciona un servicio:</label>
+      <select id="service-select" aria-label="Selecciona un servicio">
+        <option value="">-- Elige un servicio --</option>
+      </select>
+
+      <label for="subservice-select" id="subservice-label" style="display:none;">Selecciona una opción:</label>
+      <select id="subservice-select" aria-label="Selecciona una opción" style="display:none;">
+      </select>
+
+      <label for="date-select">Selecciona un día:</label>
+      <input type="date" id="date-select" aria-label="Selecciona un día" />
+
+      <div class="slots" id="slots-container" aria-live="polite" aria-atomic="true"></div>
+
+      <label for="customer-name">Tu nombre para reservar:</label>
+      <input type="text" id="customer-name" placeholder="Ej: María Pérez" autocomplete="off" />
+
+      <button id="book-btn" disabled>Reservar turno</button>
+
+      <div id="message" role="alert" aria-live="assertive"></div>
+
+      <div class="view-appointments" aria-label="Ver tus turnos reservados">
+        <h3>Ver tus turnos reservados</h3>
+        <label for="view-name">Ingresa tu nombre:</label>
+        <input type="text" id="view-name" placeholder="Ej: María Pérez" autocomplete="off" />
+        <button id="view-btn">Buscar turnos</button>
+
+        <div class="appointments-list" id="appointments-list" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Servicios Tab -->
+  <section id="tab-servicios" class="tab-content" tabindex="0" aria-label="Servicios">
+    <div class="container">
+      <h2>Servicios</h2>
+      <ul class="servicios-list">
+        <li><strong>Uñas:</strong> Diseño, esmaltado y cuidado profesional para que tus manos luzcan siempre perfectas y con estilo.</li>
+        <li><strong>Opciones de Uñas:</strong>
+          <ul>
+            <li><strong>Belleza de pies:</strong> Tratamientos y cuidado para que tus pies estén saludables y hermosos.</li>
+            <li><strong>Semipermanente:</strong> Esmaltado duradero con brillo y acabado profesional.</li>
+            <li><strong>Esmaltado común:</strong> Aplicación clásica con una amplia gama de colores.</li>
+            <li><strong>Esculpidas:</strong> Aumento y moldeado de uñas con gel o acrílico para un look perfecto.</li>
+          </ul>
+        </li>
+        <li><strong>Pestañas:</strong> Extensiones, lifting y tintura para realzar la mirada con volumen y naturalidad.</li>
+        <li><strong>Cejas:</strong> Diseño y depilación personalizada para dar forma y expresión a tu rostro.</li>
+        <li><strong>Depilaciones:</strong> Técnicas suaves y efectivas para una piel suave y libre de vello en las zonas deseadas.</li>
+        <li><strong>Opciones de Depilaciones:</strong>
+          <ul>
+            <li><strong>Cejas:</strong> Depilación y diseño para unas cejas definidas y armoniosas.</li>
+            <li><strong>Bozo:</strong> Depilación facial delicada para eliminar vellos finos sobre el labio superior.</li>
+            <li><strong>Axila:</strong> Depilación efectiva para mantener la piel suave y sin vello.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  // Tabs elements
+  const tabs = {
+    'inicio': document.getElementById('tab-inicio'),
+    'reservas': document.getElementById('tab-reservas'),
+    'servicios': document.getElementById('tab-servicios'),
+  };
+  const buttons = {
+    'inicio': document.getElementById('btn-inicio'),
+    'reservas': document.getElementById('btn-reservas'),
+    'servicios': document.getElementById('btn-servicios'),
+  };
+
+  // Function to switch tabs
+  function switchTab(target) {
+    for (const key in tabs) {
+      if (tabs.hasOwnProperty(key)) {
+        tabs[key].classList.remove('active');
+        tabs[key].setAttribute('aria-hidden', 'true');
+        buttons[key].classList.remove('active');
+        buttons[key].setAttribute('aria-selected', 'false');
+        buttons[key].tabIndex = -1;
+      }
+    }
+    tabs[target].classList.add('active');
+    tabs[target].removeAttribute('aria-hidden');
+    buttons[target].classList.add('active');
+    buttons[target].setAttribute('aria-selected', 'true');
+    buttons[target].tabIndex = 0;
+    buttons[target].focus();
+  }
+
+  for (const key in buttons) {
+    if(buttons.hasOwnProperty(key)) {
+      buttons[key].addEventListener('click', () => switchTab(key));
+    }
+  }
+
+  // Initialize with Inicio tab active
+  switchTab('inicio');
+
+  /* ===== RESERVATION SYSTEM ========== */
+  const services = {
+    1: "Uñas",
+    2: "Pestañas",
+    3: "Belleza de pies",
+    4: "Cejas",
+    5: "Depilaciones"
+  };
+
+  // Subservices mapping per main service
+  const subservices = {
+    1: [ // Uñas
+      { id: 'belleza_pies', name: "Belleza de pies" },
+      { id: 'semipermanente', name: "Semipermanente" },
+      { id: 'esmaltado_comun', name: "Esmaltado común" },
+      { id: 'esculpidas', name: "Esculpidas" }
+    ],
+    5: [ // Depilaciones
+      { id: 'cejas', name: "Cejas" },
+      { id: 'bozo', name: "Bozo" },
+      { id: 'axila', name: "Axila" }
+    ]
+  };
+
+  // Time slots 
+  const timeSlots = [
+    "09:00 - 10:00",
+    "10:00 - 11:00",
+    "11:00 - 12:00",
+    "13:00 - 14:00",
+    "14:00 - 15:00",
+    "15:00 - 16:00",
+    "16:00 - 17:00"
+  ];
+
+  let appointments = JSON.parse(localStorage.getItem('appointments')) || {
+    1: { default: {} }, 2: { default: {} }, 3: { default: {} },
+    4: { default: {} }, 5: { default: {} }
+  };
+
+  const serviceSelect = document.getElementById('service-select');
+  const subserviceLabel = document.getElementById('subservice-label');
+  const subserviceSelect = document.getElementById('subservice-select');
+  const dateSelect = document.getElementById('date-select');
+  const slotsContainer = document.getElementById('slots-container');
+  const customerNameInput = document.getElementById('customer-name');
+  const bookBtn = document.getElementById('book-btn');
+  const messageDiv = document.getElementById('message');
+
+  const viewNameInput = document.getElementById('view-name');
+  const viewBtn = document.getElementById('view-btn');
+  const appointmentsList = document.getElementById('appointments-list');
+
+  function initDateInput() {
+    const today = new Date().toISOString().split('T')[0];
+    dateSelect.value = today;
+    dateSelect.min = today;
+  }
+
+  function initServices() {
+    for (const [id, name] of Object.entries(services)) {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = name;
+      serviceSelect.appendChild(option);
+    }
+  }
+
+  function updateSubserviceOptions(serviceId) {
+    subserviceSelect.innerHTML = '';
+    if (subservices[serviceId]) {
+      const relevantSubs = subservices[serviceId];
+      relevantSubs.forEach(sub => {
+        const option = document.createElement('option');
+        option.value = sub.id;
+        option.textContent = sub.name;
+        subserviceSelect.appendChild(option);
+      });
+      subserviceLabel.style.display = 'block';
+      subserviceSelect.style.display = 'block';
+    } else {
+      subserviceLabel.style.display = 'none';
+      subserviceSelect.style.display = 'none';
+      subserviceSelect.innerHTML = '';
+    }
+  }
+
+  function getSelectedDate() {
+    const d = dateSelect.value;
+    if (!d) return null;
+    const selected = new Date(d);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (selected < today) return null;
+    return d;
+  }
+
+  function renderSlots() {
+    slotsContainer.innerHTML = '';
+    messageDiv.textContent = '';
+    const selectedServiceId = serviceSelect.value;
+    const selectedDate = getSelectedDate();
+    if (!selectedServiceId || !selectedDate) {
+      bookBtn.disabled = true;
+      if (!selectedDate) {
+        slotsContainer.innerHTML = '<p style="color:#ad1457; font-weight:600; margin-top:0.5rem;">Por favor, selecciona un día válido (hoy o posterior).</p>';
+      }
+      return;
+    }
+
+    const serviceId = Number(selectedServiceId);
+    let subId = 'default';
+    if (subservices[serviceId]) {
+      subId = subserviceSelect.value || subservices[serviceId][0].id;
+    }
+
+    if (!appointments[serviceId]) appointments[serviceId] = {};
+    if (!appointments[serviceId][subId]) appointments[serviceId][subId] = {};
+
+    const bookedSlots = appointments[serviceId][subId][selectedDate] || {};
+
+    timeSlots.forEach((slot, index) => {
+      const slotDiv = document.createElement('div');
+      const slotNum = index + 1;
+      const isReserved = bookedSlots[slotNum];
+      slotDiv.classList.add('slot');
+      slotDiv.dataset.slotIndex = slotNum;
+      slotDiv.textContent = slot;
+
+      if (isReserved) {
+        slotDiv.classList.add('reserved');
+        slotDiv.title = `Reservado por: ${isReserved}`;
+      } else {
+        slotDiv.classList.add('available');
+        slotDiv.title = "Disponible, haz clic para reservar";
+        slotDiv.tabIndex = 0;
+        slotDiv.setAttribute('role', 'button');
+        slotDiv.setAttribute('aria-pressed', 'false');
+        slotDiv.addEventListener('click', () => selectSlot(slotDiv));
+        slotDiv.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectSlot(slotDiv);
+          }
+        });
+      }
+
+      slotsContainer.appendChild(slotDiv);
+    });
+
+    selectedSlotIndex = null;
+    bookBtn.disabled = true;
+  }
+
+  let selectedSlotIndex = null;
+
+  function selectSlot(slotDiv) {
+    if (slotDiv.classList.contains('reserved')) return;
+    document.querySelectorAll('.slot.available').forEach(el => {
+      el.classList.remove('selected');
+      el.setAttribute('aria-pressed', 'false');
+    });
+    slotDiv.classList.add('selected');
+    slotDiv.setAttribute('aria-pressed', 'true');
+    selectedSlotIndex = Number(slotDiv.dataset.slotIndex);
+
+    if (customerNameInput.value.trim() && serviceSelect.value && getSelectedDate()) {
+      bookBtn.disabled = false;
+    }
+    messageDiv.textContent = '';
+    messageDiv.className = '';
+  }
+
+  function validateBookBtn() {
+    bookBtn.disabled = !(serviceSelect.value && selectedSlotIndex && customerNameInput.value.trim() && getSelectedDate());
+  }
+
+  function handleBooking() {
+    const serviceId = Number(serviceSelect.value);
+    const name = customerNameInput.value.trim();
+    const date = getSelectedDate();
+    let subId = 'default';
+
+    if (subservices[serviceId]) {
+      subId = subserviceSelect.value || subservices[serviceId][0].id;
+    }
+
+    if (!serviceId || !selectedSlotIndex || !name || !date) {
+      showMessage('Por favor, selecciona un servicio, un día válido, un horario y escribe tu nombre para reservar.', 'error');
+      return;
+    }
+
+    if (!appointments[serviceId]) appointments[serviceId] = {};
+    if (!appointments[serviceId][subId]) appointments[serviceId][subId] = {};
+    if (!appointments[serviceId][subId][date]) appointments[serviceId][subId][date] = {};
+
+    if (appointments[serviceId][subId][date][selectedSlotIndex]) {
+      showMessage('Ese turno ya fue reservado, por favor selecciona otro.', 'error');
+      renderSlots();
+      return;
+    }
+
+    appointments[serviceId][subId][date][selectedSlotIndex] = name;
+    saveAppointments();
+    showMessage(`Turno reservado para ${name} en ${services[serviceId]}${subId !== 'default' ? ' - ' + (() => {
+      const found = subservices[serviceId].find(s => s.id === subId);
+      return found ? found.name : '';
+    })() : ''} el ${date} a las ${timeSlots[selectedSlotIndex-1]}.`, 'success');
+
+    selectedSlotIndex = null;
+    bookBtn.disabled = true;
+    renderSlots();
+    customerNameInput.value = '';
+  }
+
+  function showMessage(msg, type) {
+    messageDiv.textContent = msg;
+    messageDiv.className = 'message ' + (type === 'error' ? 'error' : 'success');
+  }
+
+  function saveAppointments() {
+    localStorage.setItem('appointments', JSON.stringify(appointments));
+  }
+
+  function viewAppointments() {
+    const nameQuery = viewNameInput.value.trim().toLowerCase();
+    appointmentsList.innerHTML = '';
+
+    if (!nameQuery) {
+      appointmentsList.textContent = 'Por favor, ingresa un nombre para buscar.';
+      return;
+    }
+
+    let found = false;
+    const results = [];
+
+    for (const [serviceId, subs] of Object.entries(appointments)) {
+      for (const [subId, dates] of Object.entries(subs)) {
+        for (const [date, slots] of Object.entries(dates)) {
+          for (const [slotIndexStr, name] of Object.entries(slots)) {
+            const slotIndex = Number(slotIndexStr);
+            if (name.toLowerCase() === nameQuery) {
+              const subName = subId === 'default' ? '' : (() => {
+                if(subservices[serviceId]){
+                  const found = subservices[serviceId].find(s => s.id === subId);
+                  return found ? ` - ${found.name}` : '';
+                }
+                return '';
+              })();
+              found = true;
+              results.push(`<li>${services[serviceId]}${subName} - ${date} - ${timeSlots[slotIndex - 1]}</li>`);
+            }
+          }
+        }
+      }
+    }
+
+    if (found) {
+      appointmentsList.innerHTML = `<ul>${results.join('')}</ul>`;
+    } else {
+      appointmentsList.innerHTML = '<p class="no-appointments">No se encontraron turnos para ese nombre.</p>';
+    }
+  }
+
+  // Event listeners
+  serviceSelect.addEventListener('change', e => {
+    const val = e.target.value;
+    if(val){
+      updateSubserviceOptions(Number(val));
+    } else {
+      subserviceLabel.style.display = 'none';
+      subserviceSelect.style.display = 'none';
+      subserviceSelect.innerHTML = '';
+    }
+    renderSlots();
+    validateBookBtn();
+  });
+
+  subserviceSelect.addEventListener('change', () => {
+    renderSlots();
+    validateBookBtn();
+  });
+
+  dateSelect.addEventListener('input', () => {
+    renderSlots();
+    validateBookBtn();
+  });
+
+  customerNameInput.addEventListener('input', () => {
+    validateBookBtn();
+    messageDiv.textContent = '';
+    messageDiv.className = '';
+  });
+
+  bookBtn.addEventListener('click', handleBooking);
+  viewBtn.addEventListener('click', viewAppointments);
+
+  // Initialize reservation system
+  initServices();
+  initDateInput();
+  renderSlots();
+})();
+</script>
+
+</body>
+</html>
+
